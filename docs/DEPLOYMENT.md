@@ -177,16 +177,23 @@ billed as Worker requests.
 > Use `pnpm exec wrangler`, not `npx wrangler`. `wrangler` is a pinned dev dependency, so `pnpm exec`
 > guarantees the same version locally and in CI.
 
-3. Under **Advanced settings**, add **environment variables**:
+3. Add the **build** environment variables:
 
 | Name | Value |
 | --- | --- |
 | `VITE_SUPABASE_URL` | your project URL |
 | `VITE_SUPABASE_ANON_KEY` | your publishable anon key |
 
-> These are read at **build time** and compiled into the bundle — they are not runtime secrets. Without
-> them the deploy succeeds but the app loads with a configuration notice and cannot sign anyone in.
-> After changing either value you must trigger a new deployment.
+   During project creation these live under **Advanced settings**. Afterwards they are at
+   **Worker → Settings → Build → Build variables and secrets**.
+
+> **These must be _build_ variables, not runtime variables.** Vite inlines `VITE_*` values into the
+> bundle when it compiles, so anything set under **Settings → Variables & Secrets** (runtime) has no
+> effect on the frontend. Cloudflare states plainly that build variables are not accessible at runtime,
+> and the reverse holds too.
+
+> Without them the deploy still **succeeds**, but the site loads with a configuration notice and nobody
+> can sign in. Changing either value requires a new build — saving settings alone does not republish.
 
 4. Deploy. You can also deploy from your machine with `pnpm build && pnpm deploy`.
 
@@ -261,7 +268,8 @@ are the only things that stop working — the hosted workflow is unaffected.
 | Symptom | Cause and fix |
 | --- | --- |
 | Sign-in screen shows a configuration notice | `.env` is missing or unset. Add both `VITE_` variables and restart `pnpm dev`. |
-| Deployed site works but login fails | Environment variables were not set in Cloudflare, or were added after the last build. Set them and redeploy. |
+| Deployed site works but login fails | Environment variables were not set as **build** variables, or were added after the last build. Set them under **Settings → Build**, then retry the build. |
+| Deployed site shows "Supabase is not configured" | Same cause. Verify with `curl -s https://your-app.workers.dev/assets/index-*.js \| grep -o 'development-placeholder'` — a match means the build had no credentials. |
 | Refreshing a route returns 404 | On Workers, `not_found_handling` is missing from `wrangler.jsonc`. On Pages, the `_redirects` file was not published. |
 | `Invalid _redirects configuration ... Infinite loop detected` | A `public/_redirects` file is present while deploying to **Workers**. Delete it; `not_found_handling` already handles SPA routing. |
 | `Missing entry-point` on deploy | `wrangler.jsonc` was not committed, or the deploy ran from the wrong directory. |

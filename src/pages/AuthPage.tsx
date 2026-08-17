@@ -55,7 +55,7 @@ export function AuthPage() {
           <p>{isSignUp ? 'Start coordinating with your selling team.' : 'Your team trips and inventory are waiting.'}</p>
 
           {!isSupabaseConfigured && (
-            <ErrorMessage message="Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env." />
+            <ErrorMessage message="Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env for local development, or as build variables on your host, then rebuild." />
           )}
           {error && <ErrorMessage message={error} />}
           {message && <div className="alert alert--success">{message}</div>}
