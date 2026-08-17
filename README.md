@@ -156,7 +156,6 @@ src/
 supabase/
   config.toml          CLI configuration
   migrations/          Schema, RLS policies, and workflow functions
-public/_redirects      SPA fallback used when deploying to Cloudflare Pages
 wrangler.jsonc         Cloudflare Workers config (assets dir + SPA routing)
 ```
 

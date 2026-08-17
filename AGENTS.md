@@ -116,7 +116,6 @@ src/lib/             Supabase client, formatting helpers
 src/pages/           One screen per route
 src/types.ts         Shared database row types
 supabase/migrations/ Schema, RLS, workflow functions
-public/_redirects    SPA fallback for Cloudflare Pages
 wrangler.jsonc       Cloudflare Workers config (assets + SPA routing)
 ```
 

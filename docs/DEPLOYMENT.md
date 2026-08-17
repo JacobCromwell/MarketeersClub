@@ -194,9 +194,12 @@ billed as Worker requests.
 <summary>Alternative: Cloudflare Pages</summary>
 
 Choose **Pages → Connect to Git**, set the build command to `pnpm build` and the output directory to
-`dist`, and add the same two environment variables. Pages uses
-[public/_redirects](../public/_redirects) (`/* /index.html 200`) for the SPA fallback instead of
-`not_found_handling`. That file is kept in the repo so either target works.
+`dist`, and add the same two environment variables. Pages needs a `public/_redirects` file containing
+`/* /index.html 200` for the SPA fallback.
+
+**Do not add that file while deploying to Workers.** Workers also parses `_redirects`, and rejects
+`/* /index.html 200` as an infinite loop, failing the deploy. Use `not_found_handling` on Workers and
+`_redirects` on Pages — never both.
 </details>
 
 ## 6. Point Supabase Auth at production
@@ -259,7 +262,8 @@ are the only things that stop working — the hosted workflow is unaffected.
 | --- | --- |
 | Sign-in screen shows a configuration notice | `.env` is missing or unset. Add both `VITE_` variables and restart `pnpm dev`. |
 | Deployed site works but login fails | Environment variables were not set in Cloudflare, or were added after the last build. Set them and redeploy. |
-| Refreshing a route returns 404 | On Workers, `not_found_handling` is missing from `wrangler.jsonc`. On Pages, `public/_redirects` was not published. |
+| Refreshing a route returns 404 | On Workers, `not_found_handling` is missing from `wrangler.jsonc`. On Pages, the `_redirects` file was not published. |
+| `Invalid _redirects configuration ... Infinite loop detected` | A `public/_redirects` file is present while deploying to **Workers**. Delete it; `not_found_handling` already handles SPA routing. |
 | `Missing entry-point` on deploy | `wrangler.jsonc` was not committed, or the deploy ran from the wrong directory. |
 | `row-level security policy` errors | Migrations were not applied, or you are acting as the wrong user. Run `pnpm db:push`. |
 | Signup succeeds but the app looks empty | The `profiles` trigger did not run — a sign of a partially applied migration. Re-run `pnpm db:push`. |
