@@ -45,14 +45,14 @@ to see the UI shell before any Supabase setup exists.
 | Routing | React Router 7 | Client-side routes with a shared app shell |
 | Data / Auth / Realtime | Supabase | Postgres, email auth, and live notifications in one service |
 | Package manager | pnpm | Strict, content-addressed installs |
-| Hosting | Cloudflare Pages | Static hosting on a global CDN, generous free tier |
+| Hosting | Cloudflare Workers (static assets) | Static hosting on a global CDN, generous free tier |
 | Tests | Vitest | Same toolchain as Vite |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Browser["React SPA<br/>(Cloudflare Pages)"]
+    Browser["React SPA<br/>(Cloudflare Workers)"]
     subgraph Supabase
         Auth["Auth<br/>(email + password)"]
         DB[("Postgres<br/>RLS + RPC")]
@@ -156,7 +156,8 @@ src/
 supabase/
   config.toml          CLI configuration
   migrations/          Schema, RLS policies, and workflow functions
-public/_redirects      SPA fallback so deep links work on Cloudflare Pages
+public/_redirects      SPA fallback used when deploying to Cloudflare Pages
+wrangler.jsonc         Cloudflare Workers config (assets dir + SPA routing)
 ```
 
 ## Documentation

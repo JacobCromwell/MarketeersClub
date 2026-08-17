@@ -139,35 +139,65 @@ Smoke test the full loop with two accounts (a second browser profile or an incog
 
 If all seven steps pass, the database, auth, policies, and realtime are wired correctly.
 
-## 5. Deploy to Cloudflare Pages
+## 5. Deploy to Cloudflare Workers
 
-Push the repository to GitHub first.
+Push the repository to GitHub first. **`wrangler.jsonc` must be committed** — the deploy step reads it,
+and the build fails without it.
 
-1. In the Cloudflare dashboard go to **Workers & Pages → Create → Pages → Connect to Git**.
-2. Select the repository.
-3. Configure the build:
+Cloudflare now recommends **Workers with static assets** for new projects. Pages still works and is
+covered at the end of this section.
+
+The repo already contains [wrangler.jsonc](../wrangler.jsonc):
+
+```jsonc
+{
+  "name": "marketeersclub",
+  "compatibility_date": "2026-08-17",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
+```
+
+`not_found_handling: "single-page-application"` is what makes deep links like `/agreements` resolve
+instead of 404ing. There is no Worker script — this is an assets-only deployment, so SPA routes are not
+billed as Worker requests.
+
+1. In the Cloudflare dashboard go to **Workers & Pages → Create → Workers**, then **Connect to Git** and
+   pick the repository.
+2. Configure the build:
 
 | Setting | Value |
 | --- | --- |
-| Framework preset | None (or Vite) |
+| Project name | `marketeersclub` (must match `name` in `wrangler.jsonc`) |
 | Build command | `pnpm build` |
-| Build output directory | `dist` |
-| Node version | `22` (add a `NODE_VERSION` variable if needed) |
+| Deploy command | `pnpm exec wrangler deploy` |
 
-4. Add **environment variables** for the build, under Production *and* Preview:
+> Use `pnpm exec wrangler`, not `npx wrangler`. `wrangler` is a pinned dev dependency, so `pnpm exec`
+> guarantees the same version locally and in CI.
+
+3. Under **Advanced settings**, add **environment variables**:
 
 | Name | Value |
 | --- | --- |
 | `VITE_SUPABASE_URL` | your project URL |
 | `VITE_SUPABASE_ANON_KEY` | your publishable anon key |
 
-> These are read at **build time**, not at runtime. After changing either value you must trigger a new
-> deployment for it to take effect.
+> These are read at **build time** and compiled into the bundle — they are not runtime secrets. Without
+> them the deploy succeeds but the app loads with a configuration notice and cannot sign anyone in.
+> After changing either value you must trigger a new deployment.
 
-5. Deploy. Cloudflare installs with pnpm automatically because `pnpm-lock.yaml` is committed.
+4. Deploy. You can also deploy from your machine with `pnpm build && pnpm deploy`.
 
-Client-side routing is already handled: [public/_redirects](../public/_redirects) contains
-`/* /index.html 200`, so deep links like `/agreements` resolve instead of 404ing.
+<details>
+<summary>Alternative: Cloudflare Pages</summary>
+
+Choose **Pages → Connect to Git**, set the build command to `pnpm build` and the output directory to
+`dist`, and add the same two environment variables. Pages uses
+[public/_redirects](../public/_redirects) (`/* /index.html 200`) for the SPA fallback instead of
+`not_found_handling`. That file is kept in the repo so either target works.
+</details>
 
 ## 6. Point Supabase Auth at production
 
@@ -229,7 +259,8 @@ are the only things that stop working — the hosted workflow is unaffected.
 | --- | --- |
 | Sign-in screen shows a configuration notice | `.env` is missing or unset. Add both `VITE_` variables and restart `pnpm dev`. |
 | Deployed site works but login fails | Environment variables were not set in Cloudflare, or were added after the last build. Set them and redeploy. |
-| Refreshing a route returns 404 | `public/_redirects` was not published. Confirm the output directory is `dist`. |
+| Refreshing a route returns 404 | On Workers, `not_found_handling` is missing from `wrangler.jsonc`. On Pages, `public/_redirects` was not published. |
+| `Missing entry-point` on deploy | `wrangler.jsonc` was not committed, or the deploy ran from the wrong directory. |
 | `row-level security policy` errors | Migrations were not applied, or you are acting as the wrong user. Run `pnpm db:push`. |
 | Signup succeeds but the app looks empty | The `profiles` trigger did not run — a sign of a partially applied migration. Re-run `pnpm db:push`. |
 | `email rate limit exceeded` on signup | Email confirmation is on, so every signup sends a mail, and the built-in service allows only 2 per hour. Turn off **Confirm email** under **Authentication → Sign In / Providers**, or wait an hour. |

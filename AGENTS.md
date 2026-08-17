@@ -4,9 +4,9 @@ Working conventions for this repository, for both human contributors and AI codi
 
 ## Project in one paragraph
 
-Marketeers Club is a React 19 + TypeScript single-page app served by Cloudflare Pages, talking directly
-to Supabase (Postgres, Auth, Realtime). There is no custom backend. Friends form teams, post sales trips,
-and lend each other merchandise under mutually approved terms.
+Marketeers Club is a React 19 + TypeScript single-page app served by Cloudflare Workers as static
+assets, talking directly to Supabase (Postgres, Auth, Realtime). There is no custom backend. Friends form
+teams, post sales trips, and lend each other merchandise under mutually approved terms.
 
 ## Setup
 
@@ -117,6 +117,7 @@ src/pages/           One screen per route
 src/types.ts         Shared database row types
 supabase/migrations/ Schema, RLS, workflow functions
 public/_redirects    SPA fallback for Cloudflare Pages
+wrangler.jsonc       Cloudflare Workers config (assets + SPA routing)
 ```
 
 ## Pull request expectations
